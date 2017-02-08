@@ -2,7 +2,7 @@
 all:	algorithm
 
 CC=g++
-CPPFLAG=-c -g
+CPPFLAG=-c -g -Wall -Wextra
 
 PROJECT_ROOT = $(PWD)
 INCLUDE_PATH=-I${PROJECT_ROOT}/include

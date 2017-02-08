@@ -6,9 +6,6 @@
 
 using namespace std;
 
-	//int maxSize;
-	//T* dataArr;
-
 template<typename T>
 libRmq<T>::libRmq()
 {
@@ -49,7 +46,7 @@ libRmq<T>::~libRmq()
 	{
 		for (int i = 0; i < maxSize; i++)
 		{
-//			delete[] M[i];
+			delete[] M[i];
 		}
 		delete[] M;
 	}
@@ -90,6 +87,7 @@ template<typename T>
 int libRmq<T>::sparseTableUpdate(int idx, T value)
 {
 	// TODO
+	return OK;
 }
 
 template<typename T>
@@ -142,10 +140,16 @@ int libRmq<T>::init(int S)
 	}
 
 	int k = utilGet2Log(S);
+
 	M = new int*[S];
 	for (int i = 0; i < S; i++)
 	{
-		M[i] = new int[k];
+		// MUST new at least 1byte more to hold the terminate character
+		// otherwise it would crash while delete these memorys
+		//
+		// in case M[i] = new int[k], running it through valgrind would
+		// araise the error message "0 bytes after a block of size xxx"
+		M[i] = new int[k + 1];
 	}
 
 	return OK;
