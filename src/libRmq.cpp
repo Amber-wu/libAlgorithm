@@ -50,6 +50,11 @@ libRmq<T>::~libRmq()
 		}
 		delete[] M;
 	}
+
+	if (NULL != treeM)
+	{
+		delete[] treeM;
+	}
 }
 
 // sparse table
@@ -87,6 +92,8 @@ template<typename T>
 int libRmq<T>::sparseTableUpdate(int idx, T value)
 {
 	// TODO
+	dataArr[idx] = value;
+	sparseTableProcess();
 	return OK;
 }
 
@@ -112,7 +119,7 @@ int libRmq<T>::sparseTableQuery(int startIdx, int endIdx)
 template<typename T>
 int libRmq<T>::segmentTreeProcess()
 {
-	return OK;
+	return initSegTree(0, 0, maxSize - 1);
 }
 
 template<typename T>
@@ -124,7 +131,7 @@ int libRmq<T>::segmentTreeUpdate(int idx, T value)
 template<typename T>
 int libRmq<T>::segmentTreeQuery(int startIdx, int endIdx)
 {
-	return OK;
+	return querySegTree(0, 0, maxSize - 1, startIdx, endIdx);
 }
 
 template<typename T>
@@ -152,9 +159,74 @@ int libRmq<T>::init(int S)
 		M[i] = new int[k + 1];
 	}
 
+	if ((1 << k) < S) k++;
+
+	this->treeMaxIdx = (1<<k);
+
+	treeM = new int[this->treeMaxIdx + 1];
+	if (NULL == treeM)
+	{
+		PMD("failed to malloc memory\n");
+		return ERR;
+	}
+
 	return OK;
 }
 
+// nodeIdx start from 0
+template<typename T>
+int libRmq<T>::initSegTree(int nodeIdx, int left, int right)
+{
+	if (left < 0 || right > treeMaxIdx || left > right)
+	{
+		return ERR;
+	}
+
+	if (left == right)
+	{
+		treeM[nodeIdx] = left;
+	}
+	else
+	{
+		int leftCld = nodeIdx * 2 + 1;
+		initSegTree(leftCld, left, ((left + right)>>1));
+		initSegTree(leftCld + 1, ((left + right)>>1) + 1, right);
+
+		if (dataArr[treeM[leftCld]] < dataArr[treeM[leftCld + 1]])
+		{
+			treeM[nodeIdx] = treeM[leftCld];
+		}
+		else
+		{
+			treeM[nodeIdx] = treeM[leftCld + 1];
+		}
+	}
+
+	return OK;
+}
+
+template<typename T>
+int libRmq<T>::querySegTree(int nodeIdx, int left, int right, int queryL, int queryR)
+{
+	int mid, leftCld;
+	int lMinIdx, rMinIdx;
+
+	mid = (left + right)>>1;
+	leftCld = nodeIdx * 2 + 1;
+
+	if (queryL > right || queryR < left || queryL > queryR) return -1;
+
+	if (queryL <= left && right <= queryR)
+		return treeM[nodeIdx];
+
+	lMinIdx = querySegTree(leftCld, left, ((left+right)>>1), queryL, queryR);
+	rMinIdx = querySegTree(leftCld + 1, ((left+right)>>1) + 1, right, queryL, queryR);
+
+	if (-1 == lMinIdx) return rMinIdx;
+	else if (-1 == rMinIdx) return lMinIdx;
+	else if (dataArr[lMinIdx] < dataArr[rMinIdx]) return lMinIdx;
+	else return rMinIdx;
+}
 
 int testRmq()
 {
@@ -182,11 +254,22 @@ int testRmq()
 	}
 	cout<<"}\n";
 
+	cout<<"sparse table\n";
 	for (int i = 0; i < 7; i++)
 	{
 		printf("min[%d, %d]= A[%d]\n", queryArr[i][0], queryArr[i][1], rmq.sparseTableQuery(queryArr[i][0], queryArr[i][1]));
 	}
 
 	cout<<endl<<endl;
+
+
+	cout<<"segment tree\n";
+	rmq.segmentTreeProcess();
+	for (int i = 0; i < 7; i++)
+	{
+		printf("min[%d, %d]= A[%d]\n", queryArr[i][0], queryArr[i][1], rmq.segmentTreeQuery(queryArr[i][0], queryArr[i][1]));
+	}
+	cout<<endl;
+
 	return OK;
 }

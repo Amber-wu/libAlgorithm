@@ -24,7 +24,12 @@ private:
 	T* dataArr;
 	int **M;
 
+	int treeMaxIdx;
+	int *treeM;
+
 	int init(int S);
+	int initSegTree(int nodeIdx, int left, int right);
+	int querySegTree(int nodeIdx, int left, int right, int queryL, int queryR);
 };
 
 int testRmq();
