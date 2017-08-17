@@ -1,7 +1,8 @@
 .PHONY: all
-all:	algorithm
+all: preBuild algorithm
 
 CC=g++
+MKDIR=mkdir
 CPPFLAG=-c -g -Wall -Wextra
 
 PROJECT_ROOT = $(PWD)
@@ -16,9 +17,12 @@ _OBJS += libHeap.o
 _OBJS += libRmq.o
 _OBJS += libIndexTree.o
 
-OBJDIR = $(PROJECT_ROOT)/src/obj
+OBJDIR = $(PROJECT_ROOT)/obj
 SRCDIR = $(PROJECT_ROOT)/src
 OBJS = $(patsubst %, $(OBJDIR)/%, $(_OBJS))
+
+preBuild:
+	$(MKDIR) -p $(OBJDIR)
 
 # generate the final target
 algorithm: $(OBJS)
@@ -31,3 +35,4 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 clean:
 	find $(PROJECT_ROOT) -name *.o | xargs rm
 	rm la
+	rmdir $(OBJDIR)
